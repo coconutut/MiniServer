@@ -1,7 +1,7 @@
 #include <MiniServer.h>
 using namespace std;
 
-MiniServer::MiniServer(int port) : m_port(port){
+MiniServer::MiniServer(int port, int ThreadCount) : m_port(port), m_ThreadCount(ThreadCount){
     m_listenfd = socket(AF_INET, SOCK_STREAM, 0);
     if(m_listenfd == -1) cout << "listenfd create failed!"<< endl;
 
@@ -17,6 +17,10 @@ MiniServer::MiniServer(int port) : m_port(port){
     bind(m_listenfd, (struct sockaddr*)&address, sizeof(address));
     listen(m_listenfd, 5);
 
+    //初始化线性池
+    m_ThreadPool = new ThreadPool(m_ThreadCount);
+
+
     m_epollfd = epoll_create(5);
     epoll_event event;
     event.data.fd = m_listenfd;
@@ -27,6 +31,7 @@ MiniServer::MiniServer(int port) : m_port(port){
 MiniServer::~MiniServer(){
     close(m_listenfd);
     close(m_epollfd);
+    delete m_ThreadPool;
 }
 
 void MiniServer::set_nonblocking(int fd){
@@ -48,18 +53,22 @@ void MiniServer::handle_new_connection(){
 }
 
 void MiniServer::handle_message(int sockfd){
-    char buff[1024] = {0};
-    int ret = recv(sockfd, buff, 1023, 0);
-    if(ret <= 0){
-        epoll_ctl(m_epollfd, EPOLL_CTL_DEL, sockfd, 0);
-        close(sockfd);
-        cout << "Connection closed, fd : " << sockfd << endl;
-    }
-    else{
-        cout << "request from fd " << sockfd << endl;
-        const char* response = "HTTP/1.1 200 OK\r\nContent-Length: 12\r\n\r\nHello Object";
-        send(sockfd, response, strlen(response), 0);
-    }
+    m_ThreadPool->enqueue([sockfd, this]{
+        char buff[1024];
+        memset(buff, '\0', sizeof(buff));
+        int ret = recv(sockfd, buff, 1023, 0); //结尾要有'\0'
+        if(ret <= 0){
+            epoll_ctl(this->m_epollfd, EPOLL_CTL_DEL, sockfd, 0);
+            close(sockfd);
+            cout << "Connection closed, fd : " << sockfd << endl;
+        }
+        else{
+            cout << "request from fd " << sockfd << endl;
+            const char* response = "HTTP/1.1 200 OK\r\nContent-Length: 10\r\nConnection: close\r\n\r\nI LOVE YOU";
+            send(sockfd, response, strlen(response), 0);
+            close(sockfd);
+        }
+    });
 }
 
 void MiniServer::run(){

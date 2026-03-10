@@ -153,6 +153,30 @@ MiniServer.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/MiniServer.cpp.s
 .PHONY : MiniServer.cpp.s
 
+ThreadPool/ThreadPool.o: ThreadPool/ThreadPool.cpp.o
+.PHONY : ThreadPool/ThreadPool.o
+
+# target to build an object file
+ThreadPool/ThreadPool.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/ThreadPool/ThreadPool.cpp.o
+.PHONY : ThreadPool/ThreadPool.cpp.o
+
+ThreadPool/ThreadPool.i: ThreadPool/ThreadPool.cpp.i
+.PHONY : ThreadPool/ThreadPool.i
+
+# target to preprocess a source file
+ThreadPool/ThreadPool.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/ThreadPool/ThreadPool.cpp.i
+.PHONY : ThreadPool/ThreadPool.cpp.i
+
+ThreadPool/ThreadPool.s: ThreadPool/ThreadPool.cpp.s
+.PHONY : ThreadPool/ThreadPool.s
+
+# target to generate assembly for a file
+ThreadPool/ThreadPool.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/ThreadPool/ThreadPool.cpp.s
+.PHONY : ThreadPool/ThreadPool.cpp.s
+
 main.o: main.cpp.o
 .PHONY : main.o
 
@@ -189,6 +213,9 @@ help:
 	@echo "... MiniServer.o"
 	@echo "... MiniServer.i"
 	@echo "... MiniServer.s"
+	@echo "... ThreadPool/ThreadPool.o"
+	@echo "... ThreadPool/ThreadPool.i"
+	@echo "... ThreadPool/ThreadPool.s"
 	@echo "... main.o"
 	@echo "... main.i"
 	@echo "... main.s"

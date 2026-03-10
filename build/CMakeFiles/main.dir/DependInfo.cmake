@@ -9,6 +9,7 @@ set(CMAKE_DEPENDS_LANGUAGES
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/root/TinyWebServer/MiniServer/MiniServer.cpp" "CMakeFiles/main.dir/MiniServer.cpp.o" "gcc" "CMakeFiles/main.dir/MiniServer.cpp.o.d"
+  "/root/TinyWebServer/MiniServer/ThreadPool/ThreadPool.cpp" "CMakeFiles/main.dir/ThreadPool/ThreadPool.cpp.o" "gcc" "CMakeFiles/main.dir/ThreadPool/ThreadPool.cpp.o.d"
   "/root/TinyWebServer/MiniServer/main.cpp" "CMakeFiles/main.dir/main.cpp.o" "gcc" "CMakeFiles/main.dir/main.cpp.o.d"
   )
 

@@ -9,6 +9,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 add_executable(main
 	main.cpp
 	MiniServer.cpp
+	ThreadPool/ThreadPool.cpp
 )
 
 target_include_directories(main PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})

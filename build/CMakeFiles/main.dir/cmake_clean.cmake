@@ -1,6 +1,8 @@
 file(REMOVE_RECURSE
   "CMakeFiles/main.dir/MiniServer.cpp.o"
   "CMakeFiles/main.dir/MiniServer.cpp.o.d"
+  "CMakeFiles/main.dir/ThreadPool/ThreadPool.cpp.o"
+  "CMakeFiles/main.dir/ThreadPool/ThreadPool.cpp.o.d"
   "CMakeFiles/main.dir/main.cpp.o"
   "CMakeFiles/main.dir/main.cpp.o.d"
   "main"
