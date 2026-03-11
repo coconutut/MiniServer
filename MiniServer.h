@@ -8,6 +8,10 @@
 #include <unistd.h>
 #include <cstring>
 #include <ThreadPool/ThreadPool.h>
+#include <cerrno>
+#include <cstdlib>
+#include <cstring>
+#include <unordered_map>
 using namespace std;
 
 class MiniServer{
@@ -20,6 +24,8 @@ private:
     void set_nonblocking(int fd);
     void handle_new_connection();
     void handle_message(int sockfd);
+    void handle_write(int sockfd);
+    void close_connection(int sockfd);
 private:
     int threadCount;
     int m_port;
@@ -28,4 +34,6 @@ private:
     int m_ThreadCount;
     ThreadPool* m_ThreadPool;
     epoll_event m_events[1024];
+    unordered_map<int, string> m_pendingWrite;
+    mutex m_pendingMutex;
 };
