@@ -24,16 +24,17 @@ public:
     bool isRequestReady() const;
     bool isResponseReady() const;
     void setTaskSubmitted(bool v);
-    void setBusinessResult(int status, const std::string& body);
+    void setBusinessResult(int status, const std::string& body, const std::string& contentType);
     void markRequestReady();
-    void resetForNextRequest();
+    // void resetForNextRequest();
+    std::string& getMethod();
+    std::string& getPath();
 
 private:
     bool parseRequest();
     bool parseRequestLine();
     bool parseHeaders();
     bool parseBody();
-    void buildResponse();
     void markErrorResponse(int code, const std::string& msg);
 
 private:

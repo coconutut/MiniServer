@@ -201,14 +201,14 @@ void HttpConn::setTaskSubmitted(bool v){
     m_taskSubmitted = v;
 }
 
-void HttpConn::setBusinessResult(int status, const std::string& body){
+void HttpConn::setBusinessResult(int status, const std::string& body, const std::string& contentType){
     m_responseReady = true;
     m_taskSubmitted = false;
     m_requestReady = false;
 
     std::ostringstream oss;
     oss << "HTTP/1.1 " << status << " " << reason_code(status) << "\r\n"
-        << "Content-Type: text/plain; charset=utf-8\r\n"
+        << "Content-Type: " << contentType << "; charset=utf-8\r\n"
         << "Connection: close\r\n"
         << "Content-Length: " << body.size() << "\r\n\r\n"
         << body;
@@ -219,4 +219,12 @@ void HttpConn::markRequestReady(){
     m_responseReady = false;
     m_taskSubmitted = false;
     m_requestReady = false;
+}
+
+std::string& HttpConn::getMethod(){
+    return m_method;
+}
+
+std::string& HttpConn::getPath(){
+    return m_path;
 }

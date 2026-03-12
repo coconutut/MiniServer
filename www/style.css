@@ -1,0 +1,99 @@
+:root {
+	--bg-top: #eef4ff;
+	--bg-bottom: #dbe8ff;
+	--card-bg: #ffffff;
+	--text-main: #1f2a44;
+	--text-subtle: #55627a;
+	--border: #c8d5ec;
+	--accent: #2d6cdf;
+	--accent-hover: #2459b7;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+body {
+	margin: 0;
+	font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif;
+	color: var(--text-main);
+	min-height: 100vh;
+	background: linear-gradient(180deg, var(--bg-top), var(--bg-bottom));
+}
+
+.page {
+	min-height: 100vh;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 24px;
+}
+
+.login-card {
+	width: 100%;
+	max-width: 380px;
+	background: var(--card-bg);
+	border: 1px solid var(--border);
+	border-radius: 12px;
+	box-shadow: 0 10px 30px rgba(31, 42, 68, 0.12);
+	padding: 28px 24px;
+}
+
+.login-card h1 {
+	margin: 0 0 20px;
+	font-size: 24px;
+	text-align: center;
+}
+
+.login-form {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.login-form label {
+	font-size: 14px;
+	color: var(--text-subtle);
+}
+
+.login-form input {
+	width: 100%;
+	border: 1px solid var(--border);
+	border-radius: 8px;
+	padding: 11px 12px;
+	font-size: 15px;
+	outline: none;
+	transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.login-form input:focus {
+	border-color: var(--accent);
+	box-shadow: 0 0 0 3px rgba(45, 108, 223, 0.2);
+}
+
+.login-form button {
+	margin-top: 8px;
+	border: none;
+	border-radius: 8px;
+	background: var(--accent);
+	color: #ffffff;
+	font-size: 16px;
+	font-weight: 600;
+	padding: 12px;
+	cursor: pointer;
+	transition: background-color 0.2s;
+}
+
+.login-form button:hover {
+	background: var(--accent-hover);
+}
+
+@media (max-width: 480px) {
+	.login-card {
+		padding: 22px 18px;
+	}
+
+	.login-card h1 {
+		font-size: 22px;
+	}
+}

@@ -16,6 +16,8 @@
 #include <queue>
 #include <sys/eventfd.h>
 #include <stdint.h>
+#include <fstream>
+#include <sstream>
 using namespace std;
 
 class MiniServer{
@@ -50,6 +52,7 @@ private:
         int fd;
         int status;
         std::string body;
+        string contentType;
     };
     std::queue<BusinessResult> m_resultQueue;
     std::mutex m_resultMutex;

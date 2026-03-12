@@ -17,6 +17,15 @@ namespace{
             default: return "Unknown";
         }
     }
+
+    bool read_file(const std::string& path, std::string& out){
+        std::ifstream ifs(path, std::ios::in | std::ios::binary);
+        if(!ifs.is_open()) return false;
+        std::ostringstream oss;
+        oss << ifs.rdbuf();
+        out = oss.str();
+        return true;
+    }
 }
 
 MiniServer::MiniServer(int port, int ThreadCount) : m_port(port), m_ThreadCount(ThreadCount){
@@ -126,17 +135,45 @@ void MiniServer::submitBusinessTask(int fd){
 
     HttpConn* conn = it->second.get();
 
-    if(!m_HttpConn[fd]->isRequestReady() || m_HttpConn[fd]->isTaskSubmitted()){
+    if(!conn->isRequestReady() || conn->isTaskSubmitted()){
         return;
     }
 
     conn->setTaskSubmitted(true);
-    m_ThreadPool->enqueue([this, fd]{
-        int status = 200;
-        std::string body = "You have been attacked.";
+    m_ThreadPool->enqueue([this, fd, conn]{
+        int status = 404;
+        std::string contentType = "text/plain";
+        std::string body = "404 Not Found";
+        {
+            auto it = m_HttpConn.find(fd);
+            if(it != m_HttpConn.end() && it->second){
+                const std::string method =  it->second->getMethod();
+                const std::string path = it->second->getPath();
+                if(method == "GET" && path == "/login"){
+                    const std::string file_path = "/root/TinyWebServer/MiniServer/www/login.html";
+                    if(read_file(file_path, body)){
+                        status = 200;
+                        contentType = "text/html";
+                    }else{
+                        status = 500;
+                        body = "Failed to load login.html";
+                    }
+                }else if(method == "GET" && path == "/style.css"){
+                    const std::string file_path = "/root/TinyWebServer/MiniServer/www/style.css";
+                    if(read_file(file_path, body)){
+                        status = 200;
+                        contentType = "text/css";
+                    }else{
+                        status = 404;
+                        body = "style.css not found";
+                        contentType = "text/plain";
+                    }
+                }
+            }
+        }
         {
             std::lock_guard<mutex> lock(m_resultMutex);
-            m_resultQueue.push(BusinessResult{fd, status, body});
+            m_resultQueue.push(BusinessResult{fd, status, body, contentType});
         }
         uint64_t one = 1;
         ssize_t n = write(m_eventfd, &one, sizeof(one));
@@ -155,7 +192,7 @@ void MiniServer::drainBusinessResult(){
         }
         auto it = m_HttpConn.find(res.fd);
         if(it == m_HttpConn.end() || !it->second) continue;
-        it->second->setBusinessResult(res.status, res.body);
+        it->second->setBusinessResult(res.status, res.body, res.contentType);
         epoll_event event;
         event.data.fd = res.fd;
         event.events = it->second->desiredEvents() | EPOLLET | EPOLLONESHOT;
