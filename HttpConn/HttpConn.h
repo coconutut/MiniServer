@@ -20,6 +20,13 @@ public:
     bool onReadable();
     bool onWritable();
     uint32_t desiredEvents() const;
+    bool isTaskSubmitted() const;
+    bool isRequestReady() const;
+    bool isResponseReady() const;
+    void setTaskSubmitted(bool v);
+    void setBusinessResult(int status, const std::string& body);
+    void markRequestReady();
+    void resetForNextRequest();
 
 private:
     bool parseRequest();
@@ -39,4 +46,7 @@ private:
     std::string m_version;
     std::unordered_map<std::string, std::string> m_headers;
     size_t m_contentLength;
+    bool m_requestReady;
+    bool m_taskSubmitted;
+    bool m_responseReady;
 };

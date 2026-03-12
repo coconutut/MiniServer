@@ -129,6 +129,30 @@ main/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/build
 .PHONY : main/fast
 
+HttpConn/HttpConn.o: HttpConn/HttpConn.cpp.o
+.PHONY : HttpConn/HttpConn.o
+
+# target to build an object file
+HttpConn/HttpConn.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/HttpConn/HttpConn.cpp.o
+.PHONY : HttpConn/HttpConn.cpp.o
+
+HttpConn/HttpConn.i: HttpConn/HttpConn.cpp.i
+.PHONY : HttpConn/HttpConn.i
+
+# target to preprocess a source file
+HttpConn/HttpConn.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/HttpConn/HttpConn.cpp.i
+.PHONY : HttpConn/HttpConn.cpp.i
+
+HttpConn/HttpConn.s: HttpConn/HttpConn.cpp.s
+.PHONY : HttpConn/HttpConn.s
+
+# target to generate assembly for a file
+HttpConn/HttpConn.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/HttpConn/HttpConn.cpp.s
+.PHONY : HttpConn/HttpConn.cpp.s
+
 MiniServer.o: MiniServer.cpp.o
 .PHONY : MiniServer.o
 
@@ -210,6 +234,9 @@ help:
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
 	@echo "... main"
+	@echo "... HttpConn/HttpConn.o"
+	@echo "... HttpConn/HttpConn.i"
+	@echo "... HttpConn/HttpConn.s"
 	@echo "... MiniServer.o"
 	@echo "... MiniServer.i"
 	@echo "... MiniServer.s"

@@ -1,4 +1,6 @@
 file(REMOVE_RECURSE
+  "CMakeFiles/main.dir/HttpConn/HttpConn.cpp.o"
+  "CMakeFiles/main.dir/HttpConn/HttpConn.cpp.o.d"
   "CMakeFiles/main.dir/MiniServer.cpp.o"
   "CMakeFiles/main.dir/MiniServer.cpp.o.d"
   "CMakeFiles/main.dir/ThreadPool/ThreadPool.cpp.o"

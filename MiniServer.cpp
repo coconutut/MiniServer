@@ -6,11 +6,27 @@ namespace{
         cerr << message << "failed, errno =" << errno << ", error =" << strerror(errno) << endl;
         exit(EXIT_FAILURE);
     }
+
+    const char* reason_code(int code){
+        switch(code){
+            case 200: return "OK";
+            case 400: return "Bad Request";
+            case 404: return "Not Found";
+            case 405: return "Method Not Allowed";
+            case 500: return "Internal Server Error";
+            default: return "Unknown";
+        }
+    }
 }
 
 MiniServer::MiniServer(int port, int ThreadCount) : m_port(port), m_ThreadCount(ThreadCount){
     m_listenfd = socket(AF_INET, SOCK_STREAM, 0);
     if(m_listenfd == -1) die("socket");
+
+    m_eventfd = eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC);
+    if(m_eventfd == -1) die("eventfd");
+
+    
 
     set_nonblocking(m_listenfd);
 
@@ -42,11 +58,19 @@ MiniServer::MiniServer(int port, int ThreadCount) : m_port(port), m_ThreadCount(
     event.events = EPOLLIN; //LT触发
     if(epoll_ctl(m_epollfd, EPOLL_CTL_ADD, m_listenfd, &event) == -1)
         die("epoll_ctl: add listenfd");
+    
+    epoll_event ev;
+    ev.data.fd = m_eventfd;
+    ev.events = EPOLLIN;
+    if(epoll_ctl(m_epollfd, EPOLL_CTL_ADD, m_eventfd, &ev) == -1){
+        die("epoll_ctl: eventfd");
+    }
 }
 
 MiniServer::~MiniServer(){
     close(m_listenfd);
     close(m_epollfd);
+    close(m_eventfd);
     delete m_ThreadPool;
 }
 
@@ -56,6 +80,13 @@ void MiniServer::set_nonblocking(int fd){
         die("fcntl(F_GETFL)");
     if(fcntl(fd, F_SETFL,  old_option | O_NONBLOCK) == -1)
         die("fcntl(F_SETFL)");
+}
+
+void MiniServer::close_connection(int sockfd){
+    epoll_ctl(m_epollfd, EPOLL_CTL_DEL, sockfd, nullptr);
+    close(sockfd);
+    m_HttpConn.erase(sockfd);
+    cout << "connection closed: " << sockfd << endl;
 }
 
 void MiniServer::handle_new_connection(){
@@ -72,6 +103,7 @@ void MiniServer::handle_new_connection(){
             continue;
         }
         set_nonblocking(connfd);
+        m_HttpConn[connfd] = make_unique<HttpConn>(connfd);
 
         epoll_event event;
         event.data.fd = connfd;
@@ -86,105 +118,49 @@ void MiniServer::handle_new_connection(){
     }
 }
 
-void MiniServer::handle_message(int sockfd){
-    m_ThreadPool->enqueue([sockfd, this]{
-        char buff[1024];
-        memset(buff, '\0', sizeof(buff));
-        string request;
-        while(true){
-            int ret = recv(sockfd, buff, sizeof(buff), 0);
-            if(ret > 0){
-                request.append(buff, ret);
-                continue;
-            }
-            if(ret == 0){
-                epoll_ctl(m_epollfd, EPOLL_CTL_DEL, sockfd, nullptr);
-                close(sockfd);
-                cout << "Connection closed, fd : " << sockfd << endl;
-                return;
-            }
-            if(errno == EAGAIN || errno == EWOULDBLOCK){
-                break;
-            }else{
-                epoll_ctl(m_epollfd, EPOLL_CTL_DEL, sockfd, nullptr);
-                close(sockfd);
-                return;
-            }
-        }
-        cout << "receive request : " << request << endl;
-        string body = "Hello from MiniServer";
-        string response =
-            "HTTP/1.1 200 OK\r\n"
-            "Content-Type: text/plain; charset=utf-8\r\n"
-            "Connection: close\r\n"
-            "Content-Length: " + to_string(body.size()) + "\r\n\r\n" +
-            body;
+void MiniServer::submitBusinessTask(int fd){
+    auto it = m_HttpConn.find(fd);
+    if(it == m_HttpConn.end() || !it->second){
+        return;
+    }
 
-        size_t sent = 0;
-        while(sent < response.size()){
-            int ret = send(sockfd, response.c_str() + sent, response.size() - sent, 0);
-            if(ret > 0){
-                sent += ret;
-                continue;
-            }
-            if(ret < 0 && (errno == EAGAIN || errno == EWOULDBLOCK)){
-                lock_guard<mutex> lock(m_pendingMutex);
-                m_pendingWrite[sockfd] = response.substr(sent);
-                epoll_event event;
-                event.data.fd = sockfd;
-                event.events = EPOLLOUT | EPOLLET | EPOLLONESHOT;
-                epoll_ctl(m_epollfd, EPOLL_CTL_MOD, sockfd, &event);
-                return;
-            }
-            //ret == 0时候
-            close_connection(sockfd);
-            return;
+    HttpConn* conn = it->second.get();
+
+    if(!m_HttpConn[fd]->isRequestReady() || m_HttpConn[fd]->isTaskSubmitted()){
+        return;
+    }
+
+    conn->setTaskSubmitted(true);
+    m_ThreadPool->enqueue([this, fd]{
+        int status = 200;
+        std::string body = "You have been attacked.";
+        {
+            std::lock_guard<mutex> lock(m_resultMutex);
+            m_resultQueue.push(BusinessResult{fd, status, body});
         }
-        close_connection(sockfd);
+        uint64_t one = 1;
+        ssize_t n = write(m_eventfd, &one, sizeof(one));
+        if(n < 0 && errno != EAGAIN) cout << "event notice failed!" << endl;
     });
 }
 
-void MiniServer::close_connection(int sockfd){
-    epoll_ctl(m_epollfd, EPOLL_CTL_DEL, sockfd, nullptr);
-    close(sockfd);
-    lock_guard<mutex> lock(m_pendingMutex);
-    m_pendingWrite.erase(sockfd);
-}
-
-void MiniServer::handle_write(int sockfd){
-    string pending;
-    {
-        lock_guard<mutex> lock(m_pendingMutex);
-        auto it = m_pendingWrite.find(sockfd);
-        if(it == m_pendingWrite.end()) return;
-        pending = it->second;
-    }
-
-    size_t sent = 0;
-    while(sent < pending.size()){
-        int ret  = send(sockfd, pending.c_str() + sent, pending.size() - sent, 0);
-        if(ret > 0){
-            sent += ret;
-            continue;
+void MiniServer::drainBusinessResult(){
+    while(true){
+        BusinessResult res;
+        {
+            std::lock_guard<mutex> lock(m_resultMutex);
+            if(m_resultQueue.empty()) return;
+            res = m_resultQueue.front();
+            m_resultQueue.pop();
         }
-        if(ret < 0 && (errno == EAGAIN || errno == EWOULDBLOCK)){
-            lock_guard<mutex> lock(m_pendingMutex);
-            m_pendingWrite[sockfd] = pending.substr(sent);
-            epoll_event event;
-            event.data.fd = sockfd;
-            event.events = EPOLLOUT | EPOLLONESHOT | EPOLLET;
-            epoll_ctl(m_epollfd, EPOLL_CTL_MOD, sockfd, &event);
-            return;
-        }
-        //ret == 0时候
-        close_connection(sockfd);
-        return;
+        auto it = m_HttpConn.find(res.fd);
+        if(it == m_HttpConn.end() || !it->second) continue;
+        it->second->setBusinessResult(res.status, res.body);
+        epoll_event event;
+        event.data.fd = res.fd;
+        event.events = it->second->desiredEvents() | EPOLLET | EPOLLONESHOT;
+        epoll_ctl(m_epollfd, EPOLL_CTL_MOD, res.fd, &event);
     }
-    {
-        lock_guard<mutex> lock(m_pendingMutex);
-        m_pendingWrite.erase(sockfd);
-    }
-    close_connection(sockfd);
 }
 
 void MiniServer::run(){
@@ -194,20 +170,38 @@ void MiniServer::run(){
         for(int i = 0; i < number; i++){
             int sockfd = m_events[i].data.fd;
             if(m_events[i].events & (EPOLLERR | EPOLLRDHUP | EPOLLHUP)){
-                epoll_ctl(m_epollfd, EPOLL_CTL_DEL, sockfd, nullptr);
-                close(sockfd);
+                close_connection(sockfd);
                 continue;
             }
+            //新连接
             if(sockfd == m_listenfd){
                 handle_new_connection(); 
                 continue;
             }
-            if(m_events[i].events & EPOLLIN){
-                handle_message(sockfd);
+            //事件通知
+            if(sockfd == m_eventfd){
+                uint64_t cnt;
+                while(read(m_eventfd, &cnt, sizeof(cnt)) > 0) {}
+                drainBusinessResult();
+                continue;
             }
-            if(m_events[i].events & EPOLLOUT){
-                handle_write(sockfd);
+            //请求解析、回复
+            bool alive = true;
+            auto it = m_HttpConn.find(sockfd);
+            if(it == m_HttpConn.end() || !it->second) continue;
+            if(m_events[i].events & EPOLLIN){
+                alive = it->second->onReadable();
+                if(it->second->isRequestReady())
+                    submitBusinessTask(sockfd);
+            }
+            if(alive && (m_events[i].events & EPOLLOUT)){
+                alive = it->second->onWritable();
+            }
+            if(!alive){
+                close_connection(sockfd);
+                continue;
             }
         }
+        drainBusinessResult();
     }
 }

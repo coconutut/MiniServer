@@ -1,0 +1,22 @@
+[
+{
+  "directory": "/root/TinyWebServer/MiniServer/build",
+  "command": "/usr/bin/g++  -I/root/TinyWebServer/MiniServer -g -std=c++17 -o CMakeFiles/main.dir/main.cpp.o -c /root/TinyWebServer/MiniServer/main.cpp",
+  "file": "/root/TinyWebServer/MiniServer/main.cpp"
+},
+{
+  "directory": "/root/TinyWebServer/MiniServer/build",
+  "command": "/usr/bin/g++  -I/root/TinyWebServer/MiniServer -g -std=c++17 -o CMakeFiles/main.dir/MiniServer.cpp.o -c /root/TinyWebServer/MiniServer/MiniServer.cpp",
+  "file": "/root/TinyWebServer/MiniServer/MiniServer.cpp"
+},
+{
+  "directory": "/root/TinyWebServer/MiniServer/build",
+  "command": "/usr/bin/g++  -I/root/TinyWebServer/MiniServer -g -std=c++17 -o CMakeFiles/main.dir/ThreadPool/ThreadPool.cpp.o -c /root/TinyWebServer/MiniServer/ThreadPool/ThreadPool.cpp",
+  "file": "/root/TinyWebServer/MiniServer/ThreadPool/ThreadPool.cpp"
+},
+{
+  "directory": "/root/TinyWebServer/MiniServer/build",
+  "command": "/usr/bin/g++  -I/root/TinyWebServer/MiniServer -g -std=c++17 -o CMakeFiles/main.dir/HttpConn/HttpConn.cpp.o -c /root/TinyWebServer/MiniServer/HttpConn/HttpConn.cpp",
+  "file": "/root/TinyWebServer/MiniServer/HttpConn/HttpConn.cpp"
+}
+]

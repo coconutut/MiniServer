@@ -35,6 +35,7 @@ HttpConn::HttpConn(int fd){
     m_fd = fd;
     m_parseState = ParseState::RequestLine;
     m_contentLength = 0;
+    markRequestReady();
 }
 
 int HttpConn::fd() const{return m_fd;}
@@ -47,6 +48,7 @@ bool HttpConn::onReadable(){
             m_inBuffer.append(buff, ret);
             continue;
         }
+        if(ret == 0) return false;
         if(errno == EAGAIN || errno == EWOULDBLOCK){
             break;
         }
@@ -57,13 +59,14 @@ bool HttpConn::onReadable(){
 }
 
 bool HttpConn::onWritable(){
-    while(!m_outBuffer.empty()){
+    while(m_responseReady){
         int ret = send(m_fd, m_outBuffer.data(), m_outBuffer.size(), 0);
         if(ret > 0){
             m_outBuffer.erase(0, static_cast<size_t>(ret));
             continue;
         }
         if(ret < 0 && (errno == EAGAIN || errno == EWOULDBLOCK)){
+            m_responseReady = false;
             return true;
         }
         return false;
@@ -72,7 +75,7 @@ bool HttpConn::onWritable(){
 }
 
 uint32_t HttpConn::desiredEvents() const{
-    return m_outBuffer.empty() ? EPOLLIN : EPOLLOUT;
+    return m_responseReady ? EPOLLOUT : EPOLLIN;
 }
 
 bool HttpConn::parseRequest(){
@@ -88,9 +91,7 @@ bool HttpConn::parseRequest(){
                 if(!parseBody()) return true;
                 break;
             case ParseState::Complete:
-                if(m_outBuffer.empty()){
-                    buildResponse();
-                }
+                m_requestReady = true;
                 return true;
             case ParseState::Error:
                 return true;
@@ -130,7 +131,7 @@ bool HttpConn::parseHeaders(){
     //解析header键值对
     while(start < HeadBlock.size()){
         size_t lineEnd = HeadBlock.find("\r\n", start);
-        if(lineEnd == std::string::npos) lineEnd == HeadBlock.size();
+        if(lineEnd == std::string::npos) lineEnd = HeadBlock.size();
         std::string string_line = HeadBlock.substr(start, lineEnd - start);
         start = lineEnd + 2;
         if(string_line.empty()) continue;
@@ -171,38 +172,51 @@ bool HttpConn::parseBody(){
     return true;
 }
 
-void HttpConn::buildResponse(){
-    if(m_method != "GET" && m_method != "POST"){
-        markErrorResponse(405, "method not allowed");
-        return;
-    }
-    std::string body;
-    int code = 200;
-    if(m_path == "/") body = "hello from HttpConn state machine";
-    else if(m_path == "/ping") body = "pong";
-    else{
-        code = 404;
-        body = "Not Found";
-    }
-
-    std::ostringstream oss;
-    oss << "HTTP/1.1 " << code << " " << reason_code(code) << "\r\n"
-        << "Content-Type : text/plain; charset=utf-8\r\n"
-        << "Connection: close\r\n"
-        << "Content-Length: " << body.size() << "\r\n\r\n"
-        << body;
-    m_outBuffer = oss.str();
-}
-
 void HttpConn::markErrorResponse(int code, const std::string& msg){
     m_parseState = ParseState::Error;
     std::string body = std::to_string(code) + " " + reason_code(code) + "\n" + msg;
     std::ostringstream oss;
     oss << "HTTP/1.1 " << code << " " << reason_code(code) << "\r\n"
-        << "Content-Type : text/plain; charset=utf-8\r\n"
+        << "Content-Type: text/plain; charset=utf-8\r\n"
         << "Connection: close\r\n"
         << "Content-Length: " << body.size() << "\r\n\r\n"
         << body;
     m_outBuffer = oss.str();
 }
 
+//const函数代表函数不会修改对象成员，除mutable成员外
+bool HttpConn::isRequestReady() const{
+    return m_requestReady;
+}
+
+bool HttpConn::isResponseReady() const{
+    return m_responseReady;
+}
+
+bool HttpConn::isTaskSubmitted() const{
+    return m_taskSubmitted;
+}
+
+void HttpConn::setTaskSubmitted(bool v){
+    m_taskSubmitted = v;
+}
+
+void HttpConn::setBusinessResult(int status, const std::string& body){
+    m_responseReady = true;
+    m_taskSubmitted = false;
+    m_requestReady = false;
+
+    std::ostringstream oss;
+    oss << "HTTP/1.1 " << status << " " << reason_code(status) << "\r\n"
+        << "Content-Type: text/plain; charset=utf-8\r\n"
+        << "Connection: close\r\n"
+        << "Content-Length: " << body.size() << "\r\n\r\n"
+        << body;
+    m_outBuffer = oss.str();
+}
+
+void HttpConn::markRequestReady(){
+    m_responseReady = false;
+    m_taskSubmitted = false;
+    m_requestReady = false;
+}

@@ -10,6 +10,7 @@ add_executable(main
 	main.cpp
 	MiniServer.cpp
 	ThreadPool/ThreadPool.cpp
+	HttpConn/HttpConn.cpp
 )
 
 target_include_directories(main PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})

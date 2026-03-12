@@ -212,4 +212,7 @@ CMakeFiles/main.dir/MiniServer.cpp.o: \
  /usr/include/c++/11/bits/stl_tempbuf.h \
  /usr/include/c++/11/bits/uniform_int_dist.h /usr/include/c++/11/atomic \
  /usr/include/c++/11/bits/atomic_base.h \
- /usr/include/c++/11/bits/atomic_lockfree_defines.h
+ /usr/include/c++/11/bits/atomic_lockfree_defines.h \
+ /root/TinyWebServer/MiniServer/HttpConn/HttpConn.h \
+ /usr/include/x86_64-linux-gnu/sys/eventfd.h \
+ /usr/include/x86_64-linux-gnu/bits/eventfd.h
