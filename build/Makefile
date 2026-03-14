@@ -177,6 +177,30 @@ MiniServer.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/MiniServer.cpp.s
 .PHONY : MiniServer.cpp.s
 
+SqlConnPool/SqlConnPool.o: SqlConnPool/SqlConnPool.cpp.o
+.PHONY : SqlConnPool/SqlConnPool.o
+
+# target to build an object file
+SqlConnPool/SqlConnPool.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/SqlConnPool/SqlConnPool.cpp.o
+.PHONY : SqlConnPool/SqlConnPool.cpp.o
+
+SqlConnPool/SqlConnPool.i: SqlConnPool/SqlConnPool.cpp.i
+.PHONY : SqlConnPool/SqlConnPool.i
+
+# target to preprocess a source file
+SqlConnPool/SqlConnPool.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/SqlConnPool/SqlConnPool.cpp.i
+.PHONY : SqlConnPool/SqlConnPool.cpp.i
+
+SqlConnPool/SqlConnPool.s: SqlConnPool/SqlConnPool.cpp.s
+.PHONY : SqlConnPool/SqlConnPool.s
+
+# target to generate assembly for a file
+SqlConnPool/SqlConnPool.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/SqlConnPool/SqlConnPool.cpp.s
+.PHONY : SqlConnPool/SqlConnPool.cpp.s
+
 ThreadPool/ThreadPool.o: ThreadPool/ThreadPool.cpp.o
 .PHONY : ThreadPool/ThreadPool.o
 
@@ -225,6 +249,30 @@ main.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/main.cpp.s
 .PHONY : main.cpp.s
 
+utils/utils.o: utils/utils.cpp.o
+.PHONY : utils/utils.o
+
+# target to build an object file
+utils/utils.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/utils/utils.cpp.o
+.PHONY : utils/utils.cpp.o
+
+utils/utils.i: utils/utils.cpp.i
+.PHONY : utils/utils.i
+
+# target to preprocess a source file
+utils/utils.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/utils/utils.cpp.i
+.PHONY : utils/utils.cpp.i
+
+utils/utils.s: utils/utils.cpp.s
+.PHONY : utils/utils.s
+
+# target to generate assembly for a file
+utils/utils.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/utils/utils.cpp.s
+.PHONY : utils/utils.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -240,12 +288,18 @@ help:
 	@echo "... MiniServer.o"
 	@echo "... MiniServer.i"
 	@echo "... MiniServer.s"
+	@echo "... SqlConnPool/SqlConnPool.o"
+	@echo "... SqlConnPool/SqlConnPool.i"
+	@echo "... SqlConnPool/SqlConnPool.s"
 	@echo "... ThreadPool/ThreadPool.o"
 	@echo "... ThreadPool/ThreadPool.i"
 	@echo "... ThreadPool/ThreadPool.s"
 	@echo "... main.o"
 	@echo "... main.i"
 	@echo "... main.s"
+	@echo "... utils/utils.o"
+	@echo "... utils/utils.i"
+	@echo "... utils/utils.s"
 .PHONY : help
 
 

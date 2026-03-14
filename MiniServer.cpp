@@ -6,36 +6,19 @@ namespace{
         cerr << message << "failed, errno =" << errno << ", error =" << strerror(errno) << endl;
         exit(EXIT_FAILURE);
     }
-
-    const char* reason_code(int code){
-        switch(code){
-            case 200: return "OK";
-            case 400: return "Bad Request";
-            case 404: return "Not Found";
-            case 405: return "Method Not Allowed";
-            case 500: return "Internal Server Error";
-            default: return "Unknown";
-        }
-    }
-
-    bool read_file(const std::string& path, std::string& out){
-        std::ifstream ifs(path, std::ios::in | std::ios::binary);
-        if(!ifs.is_open()) return false;
-        std::ostringstream oss;
-        oss << ifs.rdbuf();
-        out = oss.str();
-        return true;
-    }
 }
 
 MiniServer::MiniServer(int port, int ThreadCount) : m_port(port), m_ThreadCount(ThreadCount){
+    //sql连接池初始化
+    if(!SqlConnPool::Instance().Init("127.0.0.1", "3306", "root", "Monster12300!", "mydb", 10)){
+        die("SqlPool init failed");
+    }
+    
     m_listenfd = socket(AF_INET, SOCK_STREAM, 0);
     if(m_listenfd == -1) die("socket");
 
     m_eventfd = eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC);
     if(m_eventfd == -1) die("eventfd");
-
-    
 
     set_nonblocking(m_listenfd);
 
@@ -101,8 +84,7 @@ void MiniServer::close_connection(int sockfd){
 void MiniServer::handle_new_connection(){
     while(true){
         struct sockaddr_in client_address;
-        socklen_t client_addrlength = sizeof(client_address);
-        
+        socklen_t client_addrlength = sizeof(client_address);        
         int connfd = accept(m_listenfd, (struct sockaddr*)&client_address, &client_addrlength);
         if(connfd == -1){
             if(errno == EAGAIN || errno == EWOULDBLOCK){
@@ -144,28 +126,155 @@ void MiniServer::submitBusinessTask(int fd){
         int status = 404;
         std::string contentType = "text/plain";
         std::string body = "404 Not Found";
-        {
-            auto it = m_HttpConn.find(fd);
-            if(it != m_HttpConn.end() && it->second){
-                const std::string method =  it->second->getMethod();
-                const std::string path = it->second->getPath();
-                if(method == "GET" && path == "/login"){
-                    const std::string file_path = "/root/TinyWebServer/MiniServer/www/login.html";
-                    if(read_file(file_path, body)){
+
+        MYSQL* sql = nullptr;
+        SqlConnRAII raii(&sql, &SqlConnPool::Instance());
+        if(!sql){
+            status = 500;
+            body = "database unavailable";
+            contentType = "text/plain";
+        }else{
+            if(mysql_query(sql, "SELECT 1") != 0){
+                status = 500;
+                body = "database query failed";
+                contentType = "text/plain";
+            }
+            else{
+                MYSQL_RES* pingRes = mysql_store_result(sql);
+                if(pingRes){
+                    mysql_free_result(pingRes);
+                }
+                auto it = m_HttpConn.find(fd);
+                if(it != m_HttpConn.end() && it->second){
+                    const std::string method =  it->second->getMethod();
+                    const std::string path = it->second->getPath();
+                    const std::string rBody = it->second->getBody();
+                    if(method == "GET" && path == "/login"){
+                        const std::string file_path = "/root/TinyWebServer/MiniServer/www/login.html";
+                        if(utils::ReadFile(file_path, body)){
+                            status = 200;
+                            contentType = "text/html";
+                        }else{
+                            status = 500;
+                            body = "Failed to load login.html";
+                        }
+                    }else if(method == "GET" && path == "/style.css"){
+                        const std::string file_path = "/root/TinyWebServer/MiniServer/www/style.css";
+                        if(utils::ReadFile(file_path, body)){
+                            status = 200;
+                            contentType = "text/css";
+                        }else{
+                            status = 404;
+                            body = "style.css not found";
+                            contentType = "text/plain";
+                        }
+                    }else if(method == "POST" && path == "/login"){
                         status = 200;
-                        contentType = "text/html";
-                    }else{
-                        status = 500;
-                        body = "Failed to load login.html";
-                    }
-                }else if(method == "GET" && path == "/style.css"){
-                    const std::string file_path = "/root/TinyWebServer/MiniServer/www/style.css";
-                    if(read_file(file_path, body)){
-                        status = 200;
-                        contentType = "text/css";
+                        std::unordered_map<std::string, std::string> Form = utils::ParseForm(rBody);
+                        auto username = Form["username"];
+                        auto password = Form["password"];
+                        if(username.empty() || password.empty()){
+                            status = 400;
+                            body = "username/password required";
+                            contentType = "text/plain";
+                        }else{
+                            char userEsc[256] = {0};
+                            mysql_real_escape_string(sql, userEsc, username.c_str(), static_cast<unsigned long>(username.size()));
+                            std::string query = "SELECT password_hash, password_salt From users where username = '" + std::string(userEsc) + "'LIMIT 1";
+                            if(mysql_query(sql, query.c_str()) != 0){
+                                status = 500;
+                                body = "mysql query failed";
+                                contentType = "text/plain";
+                            }else{
+                                MYSQL_RES* res = mysql_store_result(sql);
+                                if(!res){
+                                    status = 500;
+                                    body = "db result failed";
+                                    contentType = "text/plain";
+                                }
+                                else{
+                                    MYSQL_ROW row = mysql_fetch_row(res);
+                                    if(!row){
+                                        status = 401;
+                                        body = "user not found";
+                                        contentType = "text/plain";
+                                    }
+                                    else{
+                                        std::string dbHash = row[0] ? row[0] : "";
+                                        std::string dbSalt = row[1] ? row[1] : "";
+                                        std::string inputHash = utils::pbkdf2Hash(password, dbSalt);
+                                        if(!inputHash.empty() && inputHash == dbHash){
+                                            status = 200;
+                                            body = "login sucess";
+                                            contentType = "text/plain";
+                                        }else{
+                                            status = 401;
+                                            body = "wrong password";
+                                            contentType = "text/plain";
+                                        }
+                                    }
+                                    mysql_free_result(res);
+                                }
+                            }
+                        }
+                    }else if(method == "POST" && path == "/register"){
+                        std::unordered_map<std::string, std::string> form = utils::ParseForm(rBody);
+                        std::string username = form["username"];
+                        std::string password = form["password"];
+                        contentType = "text/plain";
+
+                        if(username.empty() || password.empty()){
+                            status = 400;
+                            body = "username/password required";
+                        }else{
+                            char userEsc[256] = {0};
+                            mysql_real_escape_string(sql, userEsc, username.c_str(),
+                            static_cast<unsigned long>(username.size()));
+                                // 1) 检查用户名是否已存在
+                            std::string checkSql =
+                            "SELECT id FROM users WHERE username='" + std::string(userEsc) + "' LIMIT 1";
+                            if(mysql_query(sql, checkSql.c_str()) != 0){
+                                status = 500;
+                                body = "db query failed";
+                            }else{
+                                MYSQL_RES* res = mysql_store_result(sql);
+                                if(!res){
+                                    status = 500;
+                                    body = "db result failed";
+                                }else{
+                                    MYSQL_ROW row = mysql_fetch_row(res);
+                                    if(row){
+                                        status = 409;
+                                        body = "user already exists";
+                                        mysql_free_result(res);
+                                    }else{
+                                            mysql_free_result(res);
+                                            // 2) 生成盐 + PBKDF2 哈希
+                                            std::string saltHex = utils::generateSaltHex();
+                                            std::string hashHex = utils::pbkdf2Hash(password, saltHex);
+                                            if(saltHex.empty() || hashHex.empty()){
+                                                status = 500;
+                                                body = "password hash failed";
+                                            }else{
+                                            // 3) 写入用户
+                                                std::string insertSql =
+                                                "INSERT INTO users(username, password_hash, password_salt) VALUES('"
+                                                + std::string(userEsc) + "','" + hashHex + "','" + saltHex + "')";
+                                                if(mysql_query(sql, insertSql.c_str()) != 0){
+                                                    status = 500;
+                                                    body = "register failed";
+                                                }else{
+                                                    status = 200;
+                                                    body = "register success";
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                     }else{
                         status = 404;
-                        body = "style.css not found";
+                        body = "404 Not Found";
                         contentType = "text/plain";
                     }
                 }

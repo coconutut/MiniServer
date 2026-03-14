@@ -3,6 +3,7 @@
 #include <string>
 #include <unordered_map>
 #include <sys/epoll.h>
+#include <utils/utils.h>
 
 enum class ParseState{
     RequestLine,
@@ -29,6 +30,7 @@ public:
     // void resetForNextRequest();
     std::string& getMethod();
     std::string& getPath();
+    std::string& getBody();
 
 private:
     bool parseRequest();
@@ -45,6 +47,7 @@ private:
     std::string m_method;
     std::string m_path;
     std::string m_version;
+    std::string m_body;
     std::unordered_map<std::string, std::string> m_headers;
     size_t m_contentLength;
     bool m_requestReady;

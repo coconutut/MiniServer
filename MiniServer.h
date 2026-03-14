@@ -7,8 +7,6 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <cstring>
-#include <ThreadPool/ThreadPool.h>
-#include <HttpConn/HttpConn.h>
 #include <cerrno>
 #include <cstdlib>
 #include <cstring>
@@ -18,6 +16,10 @@
 #include <stdint.h>
 #include <fstream>
 #include <sstream>
+#include <ThreadPool/ThreadPool.h>
+#include <HttpConn/HttpConn.h>
+#include <SqlConnPool/SqlConnPool.h>
+#include <utils/utils.h>
 using namespace std;
 
 class MiniServer{

@@ -6,31 +6,6 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-namespace{
-    std::string trim(const std::string& s){
-        size_t l = 0;
-        size_t r = s.size();
-        while(l < r && std::isspace(static_cast<unsigned char>(s[l]))){
-            l++;
-        }
-        while(r > l && std::isspace(static_cast<unsigned char>(s[r]))){
-            r--;
-        }
-        return s.substr(l, r - l);
-    }
-
-    const char* reason_code(int code){
-        switch(code){
-            case 200: return "OK";
-            case 400: return "Bad Request";
-            case 404: return "Not Found";
-            case 405: return "Method Not Allowed";
-            case 500: return "Internal Server Error";
-            default: return "Unknown";
-        }
-    }
-}
-
 HttpConn::HttpConn(int fd){
     m_fd = fd;
     m_parseState = ParseState::RequestLine;
@@ -140,8 +115,8 @@ bool HttpConn::parseHeaders(){
             markErrorResponse(400, "malformed hearer");
             return true;
         }
-        std::string key = trim(string_line.substr(0, colon));
-        std::string val = trim(string_line.substr(colon + 1));
+        std::string key = utils::trim(string_line.substr(0, colon));
+        std::string val = utils::trim(string_line.substr(colon + 1));
         m_headers[key] = val;
     }
     auto it = m_headers.find("Content-Length");
@@ -166,7 +141,7 @@ bool HttpConn::parseBody(){
     if(m_inBuffer.size() < m_contentLength){
         return false;
     }
-    //无业务，仅消费
+    m_body = m_inBuffer.substr(0, m_contentLength);
     m_inBuffer.erase(0, m_contentLength);
     m_parseState = ParseState::Complete;
     return true;
@@ -174,9 +149,9 @@ bool HttpConn::parseBody(){
 
 void HttpConn::markErrorResponse(int code, const std::string& msg){
     m_parseState = ParseState::Error;
-    std::string body = std::to_string(code) + " " + reason_code(code) + "\n" + msg;
+    std::string body = std::to_string(code) + " " + utils::ReasonCode(code) + "\n" + msg;
     std::ostringstream oss;
-    oss << "HTTP/1.1 " << code << " " << reason_code(code) << "\r\n"
+    oss << "HTTP/1.1 " << code << " " << utils::ReasonCode(code) << "\r\n"
         << "Content-Type: text/plain; charset=utf-8\r\n"
         << "Connection: close\r\n"
         << "Content-Length: " << body.size() << "\r\n\r\n"
@@ -207,7 +182,7 @@ void HttpConn::setBusinessResult(int status, const std::string& body, const std:
     m_requestReady = false;
 
     std::ostringstream oss;
-    oss << "HTTP/1.1 " << status << " " << reason_code(status) << "\r\n"
+    oss << "HTTP/1.1 " << status << " " << utils::ReasonCode(status) << "\r\n"
         << "Content-Type: " << contentType << "; charset=utf-8\r\n"
         << "Connection: close\r\n"
         << "Content-Length: " << body.size() << "\r\n\r\n"
@@ -227,4 +202,8 @@ std::string& HttpConn::getMethod(){
 
 std::string& HttpConn::getPath(){
     return m_path;
+}
+
+std::string& HttpConn::getBody(){
+    return m_body;
 }
