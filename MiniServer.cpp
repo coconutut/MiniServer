@@ -8,7 +8,17 @@ namespace{
     }
 }
 
-MiniServer::MiniServer(int port, int ThreadCount) : m_port(port), m_ThreadCount(ThreadCount){
+void MiniServer::rearm_connection(int fd, uint32_t events){
+    epoll_event ev{};
+    ev.data.fd =fd;
+    ev.events = events | EPOLLET | EPOLLONESHOT;
+    if(epoll_ctl(m_epollfd, EPOLL_CTL_MOD, fd, &ev) == -1){
+        cerr << "epoll_ctl mod failed, fd = " << fd << ", errno = " << errno << ", error" << strerror(errno) << endl;
+        close_connection(fd);
+    }
+}
+
+MiniServer::MiniServer(int port, int ThreadCount) : m_port(port), m_ThreadCount(ThreadCount), m_businessHandler("/root/TinyWebServer/MiniServer/www"){
     //sql连接池初始化
     if(!SqlConnPool::Instance().Init("127.0.0.1", "3306", "root", "Monster12300!", "mydb", 10)){
         die("SqlPool init failed");
@@ -120,173 +130,33 @@ void MiniServer::submitBusinessTask(int fd){
     if(!conn->isRequestReady() || conn->isTaskSubmitted()){
         return;
     }
+    BusinessRequest request;
+    request.method = conn->getMethod();
+    request.path = conn->getPath();
+    request.body = conn->getBody();
 
     conn->setTaskSubmitted(true);
-    m_ThreadPool->enqueue([this, fd, conn]{
-        int status = 404;
-        std::string contentType = "text/plain";
-        std::string body = "404 Not Found";
-
+    m_ThreadPool->enqueue([this, fd, request]{
+        BusinessResponse response;
         MYSQL* sql = nullptr;
         SqlConnRAII raii(&sql, &SqlConnPool::Instance());
-        if(!sql){
-            status = 500;
-            body = "database unavailable";
-            contentType = "text/plain";
-        }else{
-            if(mysql_query(sql, "SELECT 1") != 0){
-                status = 500;
-                body = "database query failed";
-                contentType = "text/plain";
-            }
-            else{
-                MYSQL_RES* pingRes = mysql_store_result(sql);
-                if(pingRes){
-                    mysql_free_result(pingRes);
-                }
-                auto it = m_HttpConn.find(fd);
-                if(it != m_HttpConn.end() && it->second){
-                    const std::string method =  it->second->getMethod();
-                    const std::string path = it->second->getPath();
-                    const std::string rBody = it->second->getBody();
-                    if(method == "GET" && path == "/login"){
-                        const std::string file_path = "/root/TinyWebServer/MiniServer/www/login.html";
-                        if(utils::ReadFile(file_path, body)){
-                            status = 200;
-                            contentType = "text/html";
-                        }else{
-                            status = 500;
-                            body = "Failed to load login.html";
-                        }
-                    }else if(method == "GET" && path == "/style.css"){
-                        const std::string file_path = "/root/TinyWebServer/MiniServer/www/style.css";
-                        if(utils::ReadFile(file_path, body)){
-                            status = 200;
-                            contentType = "text/css";
-                        }else{
-                            status = 404;
-                            body = "style.css not found";
-                            contentType = "text/plain";
-                        }
-                    }else if(method == "POST" && path == "/login"){
-                        status = 200;
-                        std::unordered_map<std::string, std::string> Form = utils::ParseForm(rBody);
-                        auto username = Form["username"];
-                        auto password = Form["password"];
-                        if(username.empty() || password.empty()){
-                            status = 400;
-                            body = "username/password required";
-                            contentType = "text/plain";
-                        }else{
-                            char userEsc[256] = {0};
-                            mysql_real_escape_string(sql, userEsc, username.c_str(), static_cast<unsigned long>(username.size()));
-                            std::string query = "SELECT password_hash, password_salt From users where username = '" + std::string(userEsc) + "'LIMIT 1";
-                            if(mysql_query(sql, query.c_str()) != 0){
-                                status = 500;
-                                body = "mysql query failed";
-                                contentType = "text/plain";
-                            }else{
-                                MYSQL_RES* res = mysql_store_result(sql);
-                                if(!res){
-                                    status = 500;
-                                    body = "db result failed";
-                                    contentType = "text/plain";
-                                }
-                                else{
-                                    MYSQL_ROW row = mysql_fetch_row(res);
-                                    if(!row){
-                                        status = 401;
-                                        body = "user not found";
-                                        contentType = "text/plain";
-                                    }
-                                    else{
-                                        std::string dbHash = row[0] ? row[0] : "";
-                                        std::string dbSalt = row[1] ? row[1] : "";
-                                        std::string inputHash = utils::pbkdf2Hash(password, dbSalt);
-                                        if(!inputHash.empty() && inputHash == dbHash){
-                                            status = 200;
-                                            body = "login sucess";
-                                            contentType = "text/plain";
-                                        }else{
-                                            status = 401;
-                                            body = "wrong password";
-                                            contentType = "text/plain";
-                                        }
-                                    }
-                                    mysql_free_result(res);
-                                }
-                            }
-                        }
-                    }else if(method == "POST" && path == "/register"){
-                        std::unordered_map<std::string, std::string> form = utils::ParseForm(rBody);
-                        std::string username = form["username"];
-                        std::string password = form["password"];
-                        contentType = "text/plain";
+        response = m_businessHandler.Handle(request, sql);
 
-                        if(username.empty() || password.empty()){
-                            status = 400;
-                            body = "username/password required";
-                        }else{
-                            char userEsc[256] = {0};
-                            mysql_real_escape_string(sql, userEsc, username.c_str(),
-                            static_cast<unsigned long>(username.size()));
-                                // 1) 检查用户名是否已存在
-                            std::string checkSql =
-                            "SELECT id FROM users WHERE username='" + std::string(userEsc) + "' LIMIT 1";
-                            if(mysql_query(sql, checkSql.c_str()) != 0){
-                                status = 500;
-                                body = "db query failed";
-                            }else{
-                                MYSQL_RES* res = mysql_store_result(sql);
-                                if(!res){
-                                    status = 500;
-                                    body = "db result failed";
-                                }else{
-                                    MYSQL_ROW row = mysql_fetch_row(res);
-                                    if(row){
-                                        status = 409;
-                                        body = "user already exists";
-                                        mysql_free_result(res);
-                                    }else{
-                                            mysql_free_result(res);
-                                            // 2) 生成盐 + PBKDF2 哈希
-                                            std::string saltHex = utils::generateSaltHex();
-                                            std::string hashHex = utils::pbkdf2Hash(password, saltHex);
-                                            if(saltHex.empty() || hashHex.empty()){
-                                                status = 500;
-                                                body = "password hash failed";
-                                            }else{
-                                            // 3) 写入用户
-                                                std::string insertSql =
-                                                "INSERT INTO users(username, password_hash, password_salt) VALUES('"
-                                                + std::string(userEsc) + "','" + hashHex + "','" + saltHex + "')";
-                                                if(mysql_query(sql, insertSql.c_str()) != 0){
-                                                    status = 500;
-                                                    body = "register failed";
-                                                }else{
-                                                    status = 200;
-                                                    body = "register success";
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                    }else{
-                        status = 404;
-                        body = "404 Not Found";
-                        contentType = "text/plain";
-                    }
-                }
-            }
-        }
         {
-            std::lock_guard<mutex> lock(m_resultMutex);
-            m_resultQueue.push(BusinessResult{fd, status, body, contentType});
+            std::lock_guard<std::mutex> lock(m_resultMutex);
+            m_resultQueue.push(BusinessResult{
+                fd,
+                response.status,
+                response.body,
+                response.contentType
+            });
         }
+
         uint64_t one = 1;
         ssize_t n = write(m_eventfd, &one, sizeof(one));
-        if(n < 0 && errno != EAGAIN) cout << "event notice failed!" << endl;
+        if(n < 0 && errno != EAGAIN){
+            cout << "event notice failed!" << endl;
+        }
     });
 }
 
@@ -302,10 +172,7 @@ void MiniServer::drainBusinessResult(){
         auto it = m_HttpConn.find(res.fd);
         if(it == m_HttpConn.end() || !it->second) continue;
         it->second->setBusinessResult(res.status, res.body, res.contentType);
-        epoll_event event;
-        event.data.fd = res.fd;
-        event.events = it->second->desiredEvents() | EPOLLET | EPOLLONESHOT;
-        epoll_ctl(m_epollfd, EPOLL_CTL_MOD, res.fd, &event);
+        rearm_connection(res.fd, it->second->desiredEvents());
     }
 }
 
@@ -333,12 +200,15 @@ void MiniServer::run(){
             }
             //请求解析、回复
             bool alive = true;
+            bool submitted = false;
             auto it = m_HttpConn.find(sockfd);
             if(it == m_HttpConn.end() || !it->second) continue;
             if(m_events[i].events & EPOLLIN){
                 alive = it->second->onReadable();
-                if(it->second->isRequestReady())
+                if(it->second->isRequestReady()){
                     submitBusinessTask(sockfd);
+                    submitted = true;
+                }
             }
             if(alive && (m_events[i].events & EPOLLOUT)){
                 alive = it->second->onWritable();
@@ -346,6 +216,9 @@ void MiniServer::run(){
             if(!alive){
                 close_connection(sockfd);
                 continue;
+            }
+            if(!submitted){
+                rearm_connection(sockfd, it->second->desiredEvents());
             }
         }
         drainBusinessResult();

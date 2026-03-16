@@ -114,3 +114,26 @@ std::string utils::pbkdf2Hash(const std::string& password,
     if(ok != 1) return "";
     return toHex(out.data(), out.size());          
 }
+
+BusinessResponse utils::MakeResponse(int status, std::string body, std::string contentType){
+        BusinessResponse response;
+        response.status = status;
+        response.body = std::move(body);
+        response.contentType = std::move(contentType);
+        return response;
+}
+//escape - 转义
+std::string utils::EscapeMysqlString(MYSQL* sql, const std::string& input){
+    if(!sql) return "";
+    std::string escaped;
+    escaped.resize(input.size()*2 + 1);
+    unsigned long escapedLen = mysql_real_escape_string(
+        sql,
+        escaped.data(),
+        input.c_str(),
+        static_cast<unsigned long>(input.size())
+    );
+
+    escaped.resize(static_cast<size_t>(escapedLen));
+    return escaped;
+}

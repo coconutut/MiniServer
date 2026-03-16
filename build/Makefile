@@ -249,6 +249,30 @@ main.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/main.cpp.s
 .PHONY : main.cpp.s
 
+services/BusinessHandler.o: services/BusinessHandler.cpp.o
+.PHONY : services/BusinessHandler.o
+
+# target to build an object file
+services/BusinessHandler.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/services/BusinessHandler.cpp.o
+.PHONY : services/BusinessHandler.cpp.o
+
+services/BusinessHandler.i: services/BusinessHandler.cpp.i
+.PHONY : services/BusinessHandler.i
+
+# target to preprocess a source file
+services/BusinessHandler.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/services/BusinessHandler.cpp.i
+.PHONY : services/BusinessHandler.cpp.i
+
+services/BusinessHandler.s: services/BusinessHandler.cpp.s
+.PHONY : services/BusinessHandler.s
+
+# target to generate assembly for a file
+services/BusinessHandler.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/services/BusinessHandler.cpp.s
+.PHONY : services/BusinessHandler.cpp.s
+
 utils/utils.o: utils/utils.cpp.o
 .PHONY : utils/utils.o
 
@@ -297,6 +321,9 @@ help:
 	@echo "... main.o"
 	@echo "... main.i"
 	@echo "... main.s"
+	@echo "... services/BusinessHandler.o"
+	@echo "... services/BusinessHandler.i"
+	@echo "... services/BusinessHandler.s"
 	@echo "... utils/utils.o"
 	@echo "... utils/utils.i"
 	@echo "... utils/utils.s"

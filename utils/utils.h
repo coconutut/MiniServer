@@ -5,6 +5,7 @@
 #include <iomanip>
 #include <openssl/evp.h>
 #include <openssl/rand.h>
+#include <services/BusinessHandler.h>
 
 class utils{
 public:
@@ -25,6 +26,11 @@ public:
     static std::string generateSaltHex(size_t len = 16);
 
     static std::string pbkdf2Hash(const std::string& password,
-                                  const std::string& saltHex);         
+                                  const std::string& saltHex); 
+    
+    static BusinessResponse MakeResponse(int status, std::string body,
+                              std::string contentType = "text/plain");
+    
+    static std::string EscapeMysqlString(MYSQL* sql, const std::string& input);
 
 };

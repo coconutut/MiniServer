@@ -13,6 +13,7 @@ set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/root/TinyWebServer/MiniServer/SqlConnPool/SqlConnPool.cpp" "CMakeFiles/main.dir/SqlConnPool/SqlConnPool.cpp.o" "gcc" "CMakeFiles/main.dir/SqlConnPool/SqlConnPool.cpp.o.d"
   "/root/TinyWebServer/MiniServer/ThreadPool/ThreadPool.cpp" "CMakeFiles/main.dir/ThreadPool/ThreadPool.cpp.o" "gcc" "CMakeFiles/main.dir/ThreadPool/ThreadPool.cpp.o.d"
   "/root/TinyWebServer/MiniServer/main.cpp" "CMakeFiles/main.dir/main.cpp.o" "gcc" "CMakeFiles/main.dir/main.cpp.o.d"
+  "/root/TinyWebServer/MiniServer/services/BusinessHandler.cpp" "CMakeFiles/main.dir/services/BusinessHandler.cpp.o" "gcc" "CMakeFiles/main.dir/services/BusinessHandler.cpp.o.d"
   "/root/TinyWebServer/MiniServer/utils/utils.cpp" "CMakeFiles/main.dir/utils/utils.cpp.o" "gcc" "CMakeFiles/main.dir/utils/utils.cpp.o.d"
   )
 

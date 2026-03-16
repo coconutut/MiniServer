@@ -13,6 +13,7 @@ add_executable(main
 	HttpConn/HttpConn.cpp
 	SqlConnPool/SqlConnPool.cpp
 	utils/utils.cpp
+	services/BusinessHandler.cpp
 )
 
 target_include_directories(main PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})

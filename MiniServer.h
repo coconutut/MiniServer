@@ -19,6 +19,7 @@
 #include <ThreadPool/ThreadPool.h>
 #include <HttpConn/HttpConn.h>
 #include <SqlConnPool/SqlConnPool.h>
+#include <services/BusinessHandler.h>
 #include <utils/utils.h>
 using namespace std;
 
@@ -31,15 +32,12 @@ public:
 private:
     void set_nonblocking(int fd);
     void handle_new_connection();
-    void handle_message(int sockfd);
-    void handle_write(int sockfd);
     void close_connection(int sockfd);
     void submitBusinessTask(int fd);
     void drainBusinessResult();
     void rearm_connection(int fd, uint32_t events);
 
 private:
-    int threadCount;
     int m_port;
     int m_listenfd;
     int m_epollfd;
@@ -47,8 +45,6 @@ private:
     int m_ThreadCount;
     ThreadPool* m_ThreadPool;
     epoll_event m_events[1024];
-    unordered_map<int, string> m_pendingWrite;
-    mutex m_pendingMutex;
     unordered_map<int, unique_ptr<HttpConn>> m_HttpConn;
     struct BusinessResult{
         int fd;
@@ -58,4 +54,5 @@ private:
     };
     std::queue<BusinessResult> m_resultQueue;
     std::mutex m_resultMutex;
+    BusinessHandler m_businessHandler;
 };

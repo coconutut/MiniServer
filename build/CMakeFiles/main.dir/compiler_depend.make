@@ -256,6 +256,20 @@ CMakeFiles/main.dir/HttpConn/HttpConn.cpp.o: ../HttpConn/HttpConn.cpp \
   /usr/include/openssl/objectserr.h \
   /usr/include/openssl/rand.h \
   /usr/include/openssl/randerr.h \
+  ../services/BusinessHandler.h \
+  /usr/include/mysql/mysql.h \
+  /usr/lib/gcc/x86_64-linux-gnu/11/include/stdbool.h \
+  /usr/include/mysql/field_types.h \
+  /usr/include/mysql/my_list.h \
+  /usr/include/mysql/mysql_com.h \
+  /usr/include/mysql/my_command.h \
+  /usr/include/mysql/my_compress.h \
+  /usr/include/mysql/udf_registration_types.h \
+  /usr/include/mysql/client_plugin.h \
+  /usr/include/mysql/plugin_auth_common.h \
+  /usr/include/mysql/mysql_version.h \
+  /usr/include/mysql/mysql_time.h \
+  /usr/include/mysql/errmsg.h \
   /usr/include/x86_64-linux-gnu/sys/socket.h \
   /usr/include/x86_64-linux-gnu/bits/types/struct_iovec.h \
   /usr/include/x86_64-linux-gnu/bits/socket.h \
@@ -612,7 +626,7 @@ CMakeFiles/main.dir/MiniServer.cpp.o: ../MiniServer.cpp \
   /usr/include/openssl/objectserr.h \
   /usr/include/openssl/rand.h \
   /usr/include/openssl/randerr.h \
-  ../SqlConnPool/SqlConnPool.h \
+  ../services/BusinessHandler.h \
   /usr/include/mysql/mysql.h \
   /usr/lib/gcc/x86_64-linux-gnu/11/include/stdbool.h \
   /usr/include/mysql/field_types.h \
@@ -625,7 +639,8 @@ CMakeFiles/main.dir/MiniServer.cpp.o: ../MiniServer.cpp \
   /usr/include/mysql/plugin_auth_common.h \
   /usr/include/mysql/mysql_version.h \
   /usr/include/mysql/mysql_time.h \
-  /usr/include/mysql/errmsg.h
+  /usr/include/mysql/errmsg.h \
+  ../SqlConnPool/SqlConnPool.h
 
 CMakeFiles/main.dir/SqlConnPool/SqlConnPool.cpp.o: ../SqlConnPool/SqlConnPool.cpp \
   /usr/include/stdc-predef.h \
@@ -1399,7 +1414,7 @@ CMakeFiles/main.dir/main.cpp.o: ../main.cpp \
   /usr/include/openssl/objectserr.h \
   /usr/include/openssl/rand.h \
   /usr/include/openssl/randerr.h \
-  ../SqlConnPool/SqlConnPool.h \
+  ../services/BusinessHandler.h \
   /usr/include/mysql/mysql.h \
   /usr/lib/gcc/x86_64-linux-gnu/11/include/stdbool.h \
   /usr/include/mysql/field_types.h \
@@ -1412,7 +1427,8 @@ CMakeFiles/main.dir/main.cpp.o: ../main.cpp \
   /usr/include/mysql/plugin_auth_common.h \
   /usr/include/mysql/mysql_version.h \
   /usr/include/mysql/mysql_time.h \
-  /usr/include/mysql/errmsg.h
+  /usr/include/mysql/errmsg.h \
+  ../SqlConnPool/SqlConnPool.h
 
 CMakeFiles/main.dir/utils/utils.cpp.o: ../utils/utils.cpp \
   /usr/include/stdc-predef.h \
@@ -1665,6 +1681,20 @@ CMakeFiles/main.dir/utils/utils.cpp.o: ../utils/utils.cpp \
   /usr/include/openssl/objectserr.h \
   /usr/include/openssl/rand.h \
   /usr/include/openssl/randerr.h \
+  ../services/BusinessHandler.h \
+  /usr/include/mysql/mysql.h \
+  /usr/lib/gcc/x86_64-linux-gnu/11/include/stdbool.h \
+  /usr/include/mysql/field_types.h \
+  /usr/include/mysql/my_list.h \
+  /usr/include/mysql/mysql_com.h \
+  /usr/include/mysql/my_command.h \
+  /usr/include/mysql/my_compress.h \
+  /usr/include/mysql/udf_registration_types.h \
+  /usr/include/mysql/client_plugin.h \
+  /usr/include/mysql/plugin_auth_common.h \
+  /usr/include/mysql/mysql_version.h \
+  /usr/include/mysql/mysql_time.h \
+  /usr/include/mysql/errmsg.h \
   /usr/include/c++/11/fstream \
   /usr/include/x86_64-linux-gnu/c++/11/bits/basic_file.h \
   /usr/include/x86_64-linux-gnu/c++/11/bits/c++io.h \
@@ -1676,20 +1706,6 @@ CMakeFiles/main.dir/utils/utils.cpp.o: ../utils/utils.cpp \
 ../ThreadPool/ThreadPool.cpp:
 
 ../SqlConnPool/SqlConnPool.cpp:
-
-/usr/include/mysql/errmsg.h:
-
-/usr/include/mysql/mysql_time.h:
-
-/usr/include/mysql/plugin_auth_common.h:
-
-/usr/include/mysql/my_compress.h:
-
-/usr/include/mysql/my_command.h:
-
-/usr/include/mysql/mysql_com.h:
-
-/usr/include/mysql/field_types.h:
 
 ../SqlConnPool/SqlConnPool.h:
 
@@ -1749,8 +1765,6 @@ CMakeFiles/main.dir/utils/utils.cpp.o: ../utils/utils.cpp \
 
 /usr/include/x86_64-linux-gnu/bits/stat.h:
 
-/usr/include/x86_64-linux-gnu/bits/fcntl-linux.h:
-
 /usr/include/fcntl.h:
 
 /usr/include/netinet/in.h:
@@ -1782,6 +1796,20 @@ CMakeFiles/main.dir/utils/utils.cpp.o: ../utils/utils.cpp \
 /usr/include/x86_64-linux-gnu/bits/socket_type.h:
 
 /usr/include/x86_64-linux-gnu/bits/socket.h:
+
+/usr/include/mysql/errmsg.h:
+
+/usr/include/mysql/mysql_time.h:
+
+/usr/include/mysql/plugin_auth_common.h:
+
+/usr/include/mysql/my_compress.h:
+
+/usr/include/mysql/my_command.h:
+
+/usr/include/mysql/mysql_com.h:
+
+/usr/include/mysql/field_types.h:
 
 /usr/include/c++/11/bits/shared_ptr.h:
 
@@ -1929,6 +1957,10 @@ CMakeFiles/main.dir/utils/utils.cpp.o: ../utils/utils.cpp \
 
 /usr/include/x86_64-linux-gnu/bits/waitstatus.h:
 
+/usr/include/x86_64-linux-gnu/bits/fcntl-linux.h:
+
+../services/BusinessHandler.h:
+
 ../HttpConn/HttpConn.cpp:
 
 /usr/include/c++/11/functional:
@@ -1952,6 +1984,14 @@ CMakeFiles/main.dir/utils/utils.cpp.o: ../utils/utils.cpp \
 /usr/include/x86_64-linux-gnu/bits/libc-header-start.h:
 
 /usr/include/c++/11/bits/stringfwd.h:
+
+/usr/include/x86_64-linux-gnu/bits/types/struct_iovec.h:
+
+/usr/include/x86_64-linux-gnu/sys/socket.h:
+
+/usr/include/c++/11/bits/stl_function.h:
+
+/usr/include/c++/11/bits/memoryfwd.h:
 
 /usr/include/wchar.h:
 
@@ -1979,9 +2019,9 @@ CMakeFiles/main.dir/utils/utils.cpp.o: ../utils/utils.cpp \
 
 /usr/include/x86_64-linux-gnu/gnu/stubs-64.h:
 
-/usr/include/mysql/mysql.h:
-
 /usr/include/c++/11/iostream:
+
+/usr/include/mysql/mysql.h:
 
 /usr/include/c++/11/bits/node_handle.h:
 
@@ -2360,11 +2400,3 @@ CMakeFiles/main.dir/utils/utils.cpp.o: ../utils/utils.cpp \
 /usr/include/c++/11/bits/stl_algobase.h:
 
 /usr/include/openssl/randerr.h:
-
-/usr/include/c++/11/bits/stl_function.h:
-
-/usr/include/c++/11/bits/memoryfwd.h:
-
-/usr/include/x86_64-linux-gnu/sys/socket.h:
-
-/usr/include/x86_64-linux-gnu/bits/types/struct_iovec.h:

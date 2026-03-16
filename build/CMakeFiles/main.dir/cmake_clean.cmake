@@ -9,6 +9,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/main.dir/ThreadPool/ThreadPool.cpp.o.d"
   "CMakeFiles/main.dir/main.cpp.o"
   "CMakeFiles/main.dir/main.cpp.o.d"
+  "CMakeFiles/main.dir/services/BusinessHandler.cpp.o"
+  "CMakeFiles/main.dir/services/BusinessHandler.cpp.o.d"
   "CMakeFiles/main.dir/utils/utils.cpp.o"
   "CMakeFiles/main.dir/utils/utils.cpp.o.d"
   "main"
