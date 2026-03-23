@@ -6,6 +6,7 @@
 #include <openssl/evp.h>
 #include <openssl/rand.h>
 #include <services/BusinessHandler.h>
+#include <algorithm>
 
 class utils{
 public:
@@ -32,5 +33,7 @@ public:
                               std::string contentType = "text/plain");
     
     static std::string EscapeMysqlString(MYSQL* sql, const std::string& input);
+
+    static std::string toLower(const std::string& s);
 
 };

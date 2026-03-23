@@ -3,6 +3,7 @@
 #include <cctype>
 #include <sstream>
 #include <string>
+#include <algorithm>
 #include <sys/socket.h>
 #include <unistd.h>
 
@@ -134,6 +135,20 @@ bool HttpConn::parseHeaders(){
     }else{
         m_parseState = ParseState::Complete;
     }
+    //Keep-alive
+    std::string connKey;
+    for(const auto& kv : m_headers){
+        if(utils::toLower(kv.first) == "connection"){
+            connKey = kv.first;
+            break;
+        }
+    }
+    if(!connKey.empty()){
+        std::string connVal = utils::trim(utils::toLower(m_headers[connKey]));
+        m_keepAlive = (connVal == "keep-alive");
+    }else{
+        m_keepAlive = (m_version == "HTTP/1.1");
+    }
     return true;
 }
 
@@ -206,4 +221,13 @@ std::string& HttpConn::getPath(){
 
 std::string& HttpConn::getBody(){
     return m_body;
+}
+
+//Keep-alive
+bool HttpConn::keepAliveEnabled(){
+    return m_keepAlive;
+}
+
+void HttpConn::resetForNextRequest(){
+    m_keepAlive = false;
 }

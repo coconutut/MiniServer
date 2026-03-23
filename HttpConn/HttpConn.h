@@ -27,10 +27,12 @@ public:
     void setTaskSubmitted(bool v);
     void setBusinessResult(int status, const std::string& body, const std::string& contentType);
     void markRequestReady();
-    // void resetForNextRequest();
     std::string& getMethod();
     std::string& getPath();
     std::string& getBody();
+    //Keep-alive
+    bool keepAliveEnabled();
+    void resetForNextRequest();
 
 private:
     bool parseRequest();
@@ -38,6 +40,7 @@ private:
     bool parseHeaders();
     bool parseBody();
     void markErrorResponse(int code, const std::string& msg);
+    
 
 private:
     int m_fd;
@@ -53,4 +56,6 @@ private:
     bool m_requestReady;
     bool m_taskSubmitted;
     bool m_responseReady;
+    //Keep-alive
+    bool m_keepAlive;
 };

@@ -137,3 +137,9 @@ std::string utils::EscapeMysqlString(MYSQL* sql, const std::string& input){
     escaped.resize(static_cast<size_t>(escapedLen));
     return escaped;
 }
+
+std::string utils::toLower(const std::string& s){
+    std::string res(s);
+    std::transform(res.begin(), res.end(), res.begin(), ::tolower);
+    return res;
+}

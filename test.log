@@ -1,0 +1,64 @@
+Running 30s test @ http://127.0.0.1:7896/login
+  4 threads and 100 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency     5.48ms   51.12ms   1.69s    98.01%
+    Req/Sec     4.29k     1.94k   11.98k    72.69%
+  Latency Distribution
+     50%  376.00us
+     75%  509.00us
+     90%  692.00us
+     99%  160.27ms
+  497287 requests in 30.03s, 476.62MB read
+  Socket errors: connect 0, read 0, write 0, timeout 14
+Requests/sec:  16562.00
+Transfer/sec:     15.87MB
+
+***************************************
+
+Running 30s test @ http://127.0.0.1:7896/login
+  4 threads and 200 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency     7.04ms   58.50ms   1.67s    97.58%
+    Req/Sec     4.38k     2.08k   12.47k    69.27%
+  Latency Distribution
+     50%  412.00us
+     75%  568.00us
+     90%  767.00us
+     99%  189.00ms
+  514470 requests in 30.02s, 493.09MB read
+  Socket errors: connect 0, read 0, write 0, timeout 7
+Requests/sec:  17137.86
+Transfer/sec:     16.43MB
+
+***************************************
+
+Running 30s test @ http://127.0.0.1:7896/login
+  4 threads and 400 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency    13.16ms   82.59ms   1.83s    96.35%
+    Req/Sec     4.40k     1.92k   11.89k    69.31%
+  Latency Distribution
+     50%  463.00us
+     75%  655.00us
+     90%    0.92ms
+     99%  351.74ms
+  520789 requests in 30.05s, 499.15MB read
+  Socket errors: connect 0, read 1, write 0, timeout 66
+Requests/sec:  17331.13
+Transfer/sec:     16.61MB
+
+***************************************
+
+Running 30s test @ http://127.0.0.1:7896/login
+  4 threads and 100 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency     1.34s   166.88ms   1.62s    93.34%
+    Req/Sec    34.61     26.85    80.00     60.20%
+  Latency Distribution
+     50%    1.37s 
+     75%    1.38s 
+     90%    1.39s 
+     99%    1.43s 
+  2176 requests in 30.04s, 238.00KB read
+Requests/sec:     72.43
+Transfer/sec:      7.92KB

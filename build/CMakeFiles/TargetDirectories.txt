@@ -1,3 +1,0 @@
-/root/TinyWebServer/MiniServer/build/CMakeFiles/main.dir
-/root/TinyWebServer/MiniServer/build/CMakeFiles/edit_cache.dir
-/root/TinyWebServer/MiniServer/build/CMakeFiles/rebuild_cache.dir
