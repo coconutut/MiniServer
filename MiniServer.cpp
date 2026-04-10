@@ -212,6 +212,14 @@ void MiniServer::run(){
             }
             if(alive && (m_events[i].events & EPOLLOUT)){
                 alive = it->second->onWritable();
+                if(alive && !it->second->isResponseReady()){
+                    if(it->second->keepAliveEnabled()){
+                        it->second->resetForNextRequest();
+                    }else{
+                        close_connection(sockfd);
+                        continue;
+                    }
+                }
             }
             if(!alive){
                 close_connection(sockfd);

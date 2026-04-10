@@ -51,6 +51,7 @@ private:
         int status;
         std::string body;
         string contentType;
+        bool keepAlive;
     };
     std::queue<BusinessResult> m_resultQueue;
     std::mutex m_resultMutex;

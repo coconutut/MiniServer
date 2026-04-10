@@ -35,19 +35,20 @@ bool HttpConn::onReadable(){
 }
 
 bool HttpConn::onWritable(){
-    while(m_responseReady){
+    while(!m_outBuffer.empty()){
         int ret = send(m_fd, m_outBuffer.data(), m_outBuffer.size(), 0);
         if(ret > 0){
             m_outBuffer.erase(0, static_cast<size_t>(ret));
             continue;
         }
         if(ret < 0 && (errno == EAGAIN || errno == EWOULDBLOCK)){
-            m_responseReady = false;
+            m_responseReady = true;
             return true;
         }
         return false;
     }
-    return false;
+    m_responseReady = false;
+    return true;
 }
 
 uint32_t HttpConn::desiredEvents() const{
@@ -172,6 +173,7 @@ void HttpConn::markErrorResponse(int code, const std::string& msg){
         << "Content-Length: " << body.size() << "\r\n\r\n"
         << body;
     m_outBuffer = oss.str();
+    m_responseReady = true;
 }
 
 //const函数代表函数不会修改对象成员，除mutable成员外
@@ -198,9 +200,14 @@ void HttpConn::setBusinessResult(int status, const std::string& body, const std:
 
     std::ostringstream oss;
     oss << "HTTP/1.1 " << status << " " << utils::ReasonCode(status) << "\r\n"
-        << "Content-Type: " << contentType << "; charset=utf-8\r\n"
-        << "Connection: close\r\n"
-        << "Content-Length: " << body.size() << "\r\n\r\n"
+        << "Content-Type: " << contentType << "; charset=utf-8\r\n";
+        if(m_keepAlive){
+            oss << "Connection: keep-alive\r\n";
+        }
+        else{
+            oss << "Connection: close\r\n";
+        }
+        oss << "Content-Length: " << body.size() << "\r\n\r\n"
         << body;
     m_outBuffer = oss.str();
 }
@@ -230,4 +237,14 @@ bool HttpConn::keepAliveEnabled(){
 
 void HttpConn::resetForNextRequest(){
     m_keepAlive = false;
+    m_path.clear();
+    m_method.clear();
+    m_body.clear();
+    m_headers.clear();
+    m_parseState = ParseState::RequestLine;
+    m_contentLength = 0;
+    m_version.clear();
+    m_requestReady = false;
+    m_taskSubmitted = false;
+    m_responseReady = false;
 }
